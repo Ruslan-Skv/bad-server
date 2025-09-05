@@ -3,9 +3,9 @@ import crypto from 'crypto' // хеширование refresh токенов
 import jwt from 'jsonwebtoken'
 import mongoose, { Document, HydratedDocument, Model, Types } from 'mongoose'
 import validator from 'validator'
-// import md5 from 'md5' // для хеширования паролей (не рекомендуется для production)
-import bcrypt from 'bcrypt'
-import { BCRYPT_CONFIG } from '../config';
+import md5 from 'md5' // для хеширования паролей (не рекомендуется для production)
+// import bcrypt from 'bcrypt'
+// import { BCRYPT_CONFIG } from '../config';
 
 import { ACCESS_TOKEN, REFRESH_TOKEN } from '../config'
 import UnauthorizedError from '../errors/unauthorized-error'
@@ -128,8 +128,8 @@ userSchema.pre('save', async function hashingPassword(next) {
     try {
         // Хешируем пароль только если он был изменен
         if (this.isModified('password')) {
-            // this.password = md5(this.password)
-            this.password = await bcrypt.hash(this.password, BCRYPT_CONFIG.saltRounds);
+            this.password = md5(this.password)
+            // this.password = await bcrypt.hash(this.password, BCRYPT_CONFIG.saltRounds);
         }
         next()
     } catch (error) {
@@ -216,32 +216,32 @@ userSchema.statics.findUserByCredentials = async function findByCredentials(
         .select('+password')
         .orFail(() => new UnauthorizedError('Неправильные почта или пароль'))
     // Сравниваем хеши паролей
-    // const passwdMatch = md5(password) === user.password
+    const passwdMatch = md5(password) === user.password
     // Сравниваем пароль с хешем в базе данных
     // const passwdMatch = await bcrypt.compare(password, user.password);
 
-     let passwdMatch = false;
+    // let passwdMatch = false;
 
-    // Проверяем формат пароля: если это MD5 хеш (32 символа, hex)
-    if (user.password.length === 32 && /^[a-f0-9]{32}$/.test(user.password)) {
-        // Создаем MD5 хеш из введенного пароля
-        const md5Hash = crypto
-            .createHash('md5')
-            .update(password)
-            .digest('hex');
+    // // Проверяем формат пароля: если это MD5 хеш (32 символа, hex)
+    // if (user.password.length === 32 && /^[a-f0-9]{32}$/.test(user.password)) {
+    //     // Создаем MD5 хеш из введенного пароля
+    //     const md5Hash = crypto
+    //         .createHash('md5')
+    //         .update(password)
+    //         .digest('hex');
         
-        // Сравниваем MD5 хеши
-        passwdMatch = user.password === md5Hash;
+    //     // Сравниваем MD5 хеши
+    //     passwdMatch = user.password === md5Hash;
         
-        // Если пароль верный, обновляем его на bcrypt
-        if (passwdMatch) {
-            user.password = await bcrypt.hash(password, BCRYPT_CONFIG.saltRounds);
-            await user.save();
-        }
-    } else {
-        // Используем стандартную bcrypt проверку для новых пользователей
-        passwdMatch = await bcrypt.compare(password, user.password);
-    }
+    //     // Если пароль верный, обновляем его на bcrypt
+    //     if (passwdMatch) {
+    //         user.password = await bcrypt.hash(password, BCRYPT_CONFIG.saltRounds);
+    //         await user.save();
+    //     }
+    // } else {
+    //     // Используем стандартную bcrypt проверку для новых пользователей
+    //     passwdMatch = await bcrypt.compare(password, user.password);
+    // }
 
 
     if (!passwdMatch) {

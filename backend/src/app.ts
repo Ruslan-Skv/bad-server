@@ -35,6 +35,7 @@ app.use(urlencoded({ extended: true, limit: '10mb' }))
 // Middleware для парсинга application/json
 // Преобразует JSON тела запросов в JavaScript объекты
 // app.use(json())
+app.set('trust proxy', 1);
 app.use(limiter)
 // Обработка preflight запросов (OPTIONS) для всех маршрутов
 // Необходимо для CORS при запросах с дополнительными headers
