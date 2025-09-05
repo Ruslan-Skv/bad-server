@@ -10,9 +10,11 @@ services:
   mongo:
     image: mongo
     restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+    env_file:
+      - ./.env
+    # environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root
+    #   MONGO_INITDB_ROOT_PASSWORD: example
     volumes:
       - db:/data/db
     ports:
@@ -21,7 +23,7 @@ services:
       - internal
 
   backend:
-    restart: always
+    restart: unless-stopped
     build:
       context: backend
     env_file:
@@ -49,6 +51,7 @@ services:
       - backend
     networks:
       - internal
+    restart: unless-stopped
 
 volumes:
   frontend:

@@ -189,6 +189,23 @@ userSchema.methods.generateRefreshToken =
         return refreshToken // Возвращаем оригинальный токен клиенту
 }
 
+// Middleware для ограничения количества активных refresh токенов
+userSchema.pre('save', function limitRefreshTokens(next) {
+    // Проверяем, что массив tokens был изменен
+    if (this.isModified('tokens') && this.tokens.length > 0) {
+        const maxTokens = 5; // Максимум 5 активных сессий
+        
+        if (this.tokens.length > maxTokens) {
+            // Оставляем только последние 5 токенов (самые свежие)
+            this.tokens = this.tokens.slice(-maxTokens);
+            
+            // Можно добавить логирование для отладки
+            console.log(`Ограничение токенов: оставлено ${this.tokens.length} из ${this.tokens.length + (this.tokens.length - maxTokens)}`);
+        }
+    }
+    next();
+});
+
 // Статический метод для аутентификации
 userSchema.statics.findUserByCredentials = async function findByCredentials(
     email: string,

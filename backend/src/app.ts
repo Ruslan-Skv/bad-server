@@ -9,30 +9,33 @@ import { DB_ADDRESS } from './config' // Конфигурация базы да�
 import errorHandler from './middlewares/error-handler' // Кастомный обработчик ошибок
 import serveStatic from './middlewares/serverStatic' // Кастомный middleware для serving static files
 import routes from './routes' // Основные маршруты приложения
+import limiter from './middlewares/rate-limit'
 
 const { PORT = 3000 } = process.env
 // Создание экземпляра Express приложения
 const app = express()
-
 // Middleware для парсинга cookies
 // Позволяет работать с куками через req.cookies
 app.use(cookieParser())
-
 // app.use(cors())
-app.use(cors({ origin: process.env.ORIGIN_ALLOW, credentials: true })); // credentials: true позволяет передавать куки и авторизационные headers
+app.use(cors({
+    // origin: process.env.ORIGIN_ALLOW,
+    origin: ['http://localhost', 'http://localhost:5173'],
+    credentials: true
+})); // credentials: true позволяет передавать куки и авторизационные headers
 // app.use(express.static(path.join(__dirname, 'public')));
 
 // Кастомный middleware для serving static files
 // Обслуживает статические файлы из папки public
 app.use(serveStatic(path.join(__dirname, 'public')))
-
+app.use(json({ limit: '10mb' }))
 // Middleware для парсинга application/x-www-form-urlencoded
 // extended: true позволяет работать с сложными объектами (вложенными)
-app.use(urlencoded({ extended: true }))
+app.use(urlencoded({ extended: true, limit: '10mb' }))
 // Middleware для парсинга application/json
 // Преобразует JSON тела запросов в JavaScript объекты
-app.use(json())
-
+// app.use(json())
+app.use(limiter)
 // Обработка preflight запросов (OPTIONS) для всех маршрутов
 // Необходимо для CORS при запросах с дополнительными headers
 app.options('*', cors())

@@ -6,7 +6,7 @@ import 'dotenv/config'
 export const { PORT = '3000' } = process.env
 export const { DB_ADDRESS = 'mongodb://127.0.0.1:27017/weblarek' } = process.env
 // Конфигурация Access Token (короткоживущий токен для авторизации запросов)
-// export const { JWT_SECRET = 'JWT_SECRET' } = process.env
+export const { JWT_SECRET = 'JWT_SECRET' } = process.env
 // Конфигурация Access Token (короткоживущий токен для авторизации запросов)
 export const ACCESS_TOKEN = {
     // secret: process.env.AUTH_ACCESS_TOKEN_SECRET || 'secret-dev',  // Секретный ключ для подписи access token
@@ -25,7 +25,8 @@ export const REFRESH_TOKEN = {
         // Опции cookie для безопасности и управления
         options: {
             httpOnly: true,  // Запрещает доступ к cookie через JavaScript (защита от XSS)
-            sameSite: 'lax',  // Ограничивает отправку cookie между сайтами (защита от CSRF). 'strict' - более строгая политика
+            // sameSite: 'lax',  // Ограничивает отправку cookie между сайтами (защита от CSRF). 'strict' - более строгая политика
+            sameSite: 'strict',
             secure: false,    // true: cookie только по HTTPS (в production должно быть true)
             maxAge: ms(process.env.AUTH_REFRESH_TOKEN_EXPIRY || '7d'), // Время жизни cookie в миллисекундах (Конвертирует строку времени в миллисекунды)
             // Путь, для которого cookie действителен

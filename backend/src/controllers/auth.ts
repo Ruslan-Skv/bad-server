@@ -10,6 +10,11 @@ import NotFoundError from '../errors/not-found-error' // Кастомная ош
 import UnauthorizedError from '../errors/unauthorized-error' // Кастомная ошибка 401
 import User from '../models/user'
 
+// interface JwtPayloadWithJti extends JwtPayload {
+//     jti?: string;
+//     _id: string;
+// }
+
 // POST /auth/login  - аутентификация пользователя
 const login = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -118,6 +123,7 @@ const deleteRefreshTokenInUser = async (
         throw new UnauthorizedError('Не валидный токен')
     }
 
+    try {
     // Верификация и декодирование refresh токена
     const decodedRefreshTkn = jwt.verify(
         rfTkn,
@@ -129,18 +135,37 @@ const deleteRefreshTokenInUser = async (
     }).orFail(() => new UnauthorizedError('Пользователь не найден в базе'))
 
     // Создание хеша токена для сравнения с хранимым в базе
-    const rTknHash = crypto
-        .createHmac('sha256', REFRESH_TOKEN.secret) // Алгоритм хеширования
-        .update(rfTkn) // Данные для хеширования
-        .digest('hex') // Формат вывода
+    // const rTknHash = crypto
+    //     .createHmac('sha256', REFRESH_TOKEN.secret) // Алгоритм хеширования
+    //     .update(rfTkn) // Данные для хеширования
+    //     .digest('hex') // Формат вывода
 
-    // Удаление токена из массива tokens пользователя
-    user.tokens = user.tokens.filter((tokenObj) => tokenObj.token !== rTknHash)
+    // // Удаление токена из массива tokens пользователя
+    // user.tokens = user.tokens.filter((tokenObj) => tokenObj.token !== rTknHash)
+
+    // Удаляем все refresh токены пользователя (или конкретный по jti)
+    // user.tokens = user.tokens.filter(tokenObj => {
+    //     // Лучше хранить jti (JWT ID) в токене и в базе
+    //     try {
+    //         const decoded = jwt.verify(tokenObj.token, REFRESH_TOKEN.secret);
+    //         return decoded.jti !== decodedRefreshTkn.jti;
+    //     } catch {
+    //         return false; // Удаляем невалидные токены
+    //     }
+    // });
+
+    user.tokens = [];
 
     // Сохранение изменений в базе данных
     await user.save()
 
-    return user
+    return user;
+    } catch (error) {
+        if (error instanceof jwt.JsonWebTokenError) {
+            throw new UnauthorizedError('Невалидный токен');
+        }
+        throw error;
+    }
 }
 
 // Реализация удаления токена из базы может отличаться

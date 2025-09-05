@@ -15,7 +15,8 @@ const auth = async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.header('Authorization')
     // Проверяем наличие и формат заголовка (должен начинаться с "Bearer ")
     if (!authHeader?.startsWith('Bearer ')) {
-        throw new UnauthorizedError('Невалидный токен')
+        // throw new UnauthorizedError('Невалидный токен')
+        return next(new UnauthorizedError('Невалидный токен'));
     }
     try {
         // Разделяем заголовок на части (Bearer и сам токен)
