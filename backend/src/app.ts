@@ -5,6 +5,7 @@ import 'dotenv/config' // Загрузка переменных окружени
 import express, { json, urlencoded } from 'express' // Express framework и middleware
 import mongoose from 'mongoose' // ODM для работы с MongoDB
 import path from 'path' // Утилиты для работы с путями файловой системы
+import ExpressMongoSanitize from 'express-mongo-sanitize'
 import { DB_ADDRESS } from './config' // Конфигурация базы данных (импорт из локального файла)
 import errorHandler from './middlewares/error-handler' // Кастомный обработчик ошибок
 import serveStatic from './middlewares/serverStatic' // Кастомный middleware для serving static files
@@ -40,6 +41,7 @@ app.use(limiter)
 // Обработка preflight запросов (OPTIONS) для всех маршрутов
 // Необходимо для CORS при запросах с дополнительными headers
 app.options('*', cors())
+app.use(ExpressMongoSanitize())
 // Подключение основных маршрутов приложения
 app.use(routes)
 // Обработчик ошибок валидации celebrate

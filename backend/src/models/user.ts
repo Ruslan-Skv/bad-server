@@ -11,16 +11,16 @@ import { ACCESS_TOKEN, REFRESH_TOKEN } from '../config'
 import UnauthorizedError from '../errors/unauthorized-error'
 
 export enum Role {
-    Customer = 'customer', //обычный пользователь
-    Admin = 'admin', //администратор
+    Customer = 'customer', // обычный пользователь
+    Admin = 'admin', // администратор
 }
 
 export interface IUser extends Document {
     name: string
     email: string
     password: string
-    tokens: { token: string }[] //массив хешей refresh токенов
-    roles: Role[] //роли пользователя в системе
+    tokens: { token: string }[] // массив хешей refresh токенов
+    roles: Role[] // роли пользователя в системе
     phone: string
     totalAmount: number
     orderCount: number

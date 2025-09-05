@@ -2,7 +2,7 @@ import { Request, Express } from 'express'
 import multer, { FileFilterCallback } from 'multer'  // Middleware для обработки файлов
 import { join } from 'path'  // Утилита для работы с путями
 
-//middleware для работы с файлами
+// middleware для работы с файлами
 // Определяем типы для callback-функций multer
 type DestinationCallback = (error: Error | null, destination: string) => void
 type FileNameCallback = (error: Error | null, filename: string) => void

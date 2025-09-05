@@ -1,4 +1,4 @@
-import crypto from 'crypto' // Криптографические функции для создания хешей
+// import crypto from 'crypto' // Криптографические функции для создания хешей
 import { NextFunction, Request, Response } from 'express'
 import { constants } from 'http2' // HTTP статус-коды
 import jwt, { JwtPayload } from 'jsonwebtoken'
