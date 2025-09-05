@@ -218,7 +218,32 @@ userSchema.statics.findUserByCredentials = async function findByCredentials(
     // Сравниваем хеши паролей
     // const passwdMatch = md5(password) === user.password
     // Сравниваем пароль с хешем в базе данных
-    const passwdMatch = await bcrypt.compare(password, user.password);
+    // const passwdMatch = await bcrypt.compare(password, user.password);
+
+     let passwdMatch = false;
+
+    // Проверяем формат пароля: если это MD5 хеш (32 символа, hex)
+    if (user.password.length === 32 && /^[a-f0-9]{32}$/.test(user.password)) {
+        // Создаем MD5 хеш из введенного пароля
+        const md5Hash = crypto
+            .createHash('md5')
+            .update(password)
+            .digest('hex');
+        
+        // Сравниваем MD5 хеши
+        passwdMatch = user.password === md5Hash;
+        
+        // Если пароль верный, обновляем его на bcrypt
+        if (passwdMatch) {
+            user.password = await bcrypt.hash(password, BCRYPT_CONFIG.saltRounds);
+            await user.save();
+        }
+    } else {
+        // Используем стандартную bcrypt проверку для новых пользователей
+        passwdMatch = await bcrypt.compare(password, user.password);
+    }
+
+
     if (!passwdMatch) {
         return Promise.reject(
             new UnauthorizedError('Неправильные почта или пароль')

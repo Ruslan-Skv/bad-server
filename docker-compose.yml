@@ -6,17 +6,26 @@ services:
       - frontend/.env
     volumes:
       - frontend:/app/frontend/dist
+    networks:
+      - internal
 
   mongo:
     image: mongo
     restart: always
-    env_file:
-      - ./.env
-    # environment:
-    #   MONGO_INITDB_ROOT_USERNAME: root
-    #   MONGO_INITDB_ROOT_PASSWORD: example
+    container_name: mongodb
+    # env_file:
+    #   - ./.env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
     volumes:
       - db:/data/db
+      # Монтируем скрипты инициализации
+      # - ./mongo-init/init.js:/docker-entrypoint-initdb.d/init.js:ro
+      - ./mongo-init/import-data.sh:/docker-entrypoint-initdb.d/import-data.sh:ro
+      # Монтируем файлы данных
+      - ./.dump/weblarek.users.json:/tmp/weblarek.users.json:ro
+      - ./.dump/weblarek.products.json:/tmp/weblarek.products.json:ro
     ports:
       - 27017:27017
     networks:
@@ -37,6 +46,13 @@ services:
       - internal
     depends_on:
       - mongo
+        # Ждем пока MongoDB будет готова
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 5
+    #   start_period: 40s
 
   server:
     build:

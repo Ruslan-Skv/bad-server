@@ -7,7 +7,6 @@ import NotFoundError from '../errors/not-found-error'
 import UnauthorizedError from '../errors/unauthorized-error'
 import UserModel, { Role } from '../models/user'
 
-// есть файл middlewares/auth.js, в нём мидлвэр для проверки JWT;
 // Основной middleware для проверки JWT токена (Основной middleware аутентификации)
 const auth = async (req: Request, res: Response, next: NextFunction) => {
     let payload: JwtPayload | null = null
