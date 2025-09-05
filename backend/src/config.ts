@@ -10,13 +10,13 @@ export const { JWT_SECRET = 'JWT_SECRET' } = process.env
 // Конфигурация Access Token (короткоживущий токен для авторизации запросов)
 export const ACCESS_TOKEN = {
     // secret: process.env.AUTH_ACCESS_TOKEN_SECRET || 'secret-dev',  // Секретный ключ для подписи access token
-    secret: process.env.AUTH_ACCESS_TOKEN_SECRET as string,
-    expiry: process.env.AUTH_ACCESS_TOKEN_EXPIRY || '1d', // Время жизни access token  
+    secret: process.env.AUTH_ACCESS_TOKEN_SECRET || 'secret-dev',
+    expiry: process.env.AUTH_ACCESS_TOKEN_EXPIRY || '10m', // Время жизни access token  
 }
 // Конфигурация Refresh Token (долгоживущий токен для обновления access token)
 export const REFRESH_TOKEN = {
     // secret: process.env.AUTH_REFRESH_TOKEN_SECRET || 'secret-dev', // Секретный ключ для подписи refresh token
-    secret: process.env.AUTH_REFRESH_TOKEN_SECRET as string, 
+    secret: process.env.AUTH_REFRESH_TOKEN_SECRET || 'secret-dev', 
     expiry: process.env.AUTH_REFRESH_TOKEN_EXPIRY || '7d', // Время жизни refresh token (По умолчанию: 7 дней) 
     // Настройки cookie для хранения refresh token
     cookie: {
@@ -35,6 +35,6 @@ export const REFRESH_TOKEN = {
     },
 }
 
-export const BCRYPT_CONFIG = {
-    saltRounds: 10,
-};
+// export const BCRYPT_CONFIG = {
+//     saltRounds: 10,
+// };
