@@ -16,7 +16,7 @@ const orderRouter = Router()
 
 orderRouter.post('/', auth, validateOrderBody, createOrder)
 // orderRouter.get('/all', auth, roleGuardMiddleware(Role.Admin), validateOrdersQuery, getOrders)
-orderRouter.get('/all', roleGuardMiddleware(Role.Admin), validateOrdersQuery, getOrders)
+orderRouter.get('/all', auth, roleGuardMiddleware(Role.Admin), getOrders)
 orderRouter.get('/all/me', auth, getOrdersCurrentUser)
 orderRouter.get(
     '/:orderNumber',
