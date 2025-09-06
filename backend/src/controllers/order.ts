@@ -5,7 +5,9 @@ import NotFoundError from '../errors/not-found-error'
 import Order, { IOrder } from '../models/order'
 import Product, { IProduct } from '../models/product'
 import User from '../models/user'
-import { sanitizeText } from '../utils/sanitize'
+// import { sanitizeText } from '../utils/sanitize'
+import sanitizeHtml from 'sanitize-html'
+import escapeRegExp from 'utils/escapeRegExp'
 
 // eslint-disable-next-line max-len
 // GET /orders?page=2&limit=5&sort=totalAmount&order=desc&orderDateFrom=2024-07-01&orderDateTo=2024-08-01&status=delivering&totalAmountFrom=100&totalAmountTo=1000&search=%2B1
@@ -106,12 +108,12 @@ export const getOrders = async (
 
         // Поиск по номеру заказа или названию продукта
         if (search) {
-            // const searchRegex = new RegExp(search as string, 'i')  // Case-insensitive regex
-            // const searchNumber = Number(search)  // Пытаемся преобразовать в число
+            const searchRegex = new RegExp(escapeRegExp(search as string), 'i')  // Case-insensitive regex
+            const searchNumber = Number(search)  // Пытаемся преобразовать в число
             // Экранирование специальных символов regex для безопасности
-            const sanitizedSearch = (search as string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const searchRegex = new RegExp(sanitizedSearch, 'i');
-            const searchNumber = Number(sanitizedSearch);
+            // const sanitizedSearch = (search as string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            // const searchRegex = new RegExp(sanitizedSearch, 'i');
+            // const searchNumber = Number(sanitizedSearch);
 
             const searchConditions: any[] = [{ 'products.title': searchRegex }] // Поиск по названию продукта
 
@@ -223,11 +225,11 @@ export const getOrdersCurrentUser = async (
         // Поиск по номеру заказа или названию продукта
         if (search) {
             // если не экранировать то получаем Invalid regular expression: /+1/i: Nothing to repeat
-            // const searchRegex = new RegExp(search as string, 'i')
-            // const searchNumber = Number(search)
-            const sanitizedSearch = (search as string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const searchRegex = new RegExp(sanitizedSearch, 'i');
-            const searchNumber = Number(sanitizedSearch);
+            const searchRegex = new RegExp(escapeRegExp(search as string), 'i')
+            const searchNumber = Number(search)
+            // const sanitizedSearch = (search as string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            // const searchRegex = new RegExp(sanitizedSearch, 'i');
+            // const searchNumber = Number(sanitizedSearch);
             // Ищем продукты по названию
             const products = await Product.find({ title: searchRegex })
             // const productIds = products.map((product) => product._id)
@@ -350,7 +352,7 @@ export const createOrder = async (
             req.body
 
         // САНИТИЗИРУЕМ КОММЕНТАРИЙ ↓
-        const sanitizedComment = comment ? sanitizeText(comment) : '';
+        const sanitizedComment = comment ? sanitizeHtml(comment) : '';
 
         // Формируем корзину и проверяем товары
         items.forEach((id: Types.ObjectId) => {
