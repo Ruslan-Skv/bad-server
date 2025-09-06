@@ -38,9 +38,6 @@ export const getOrders = async (
         const currentPage = Math.max(Number(page) || 1, 1)
         const skip = (currentPage - 1) * pageSize
         
-        // console.log('Query params:', req.query);
-        // console.log('Actual limit:', actualLimit);
-
         // Создаем объект фильтров для MongoDB
         const filters: FilterQuery<Partial<IOrder>> = {}
 
@@ -143,7 +140,11 @@ export const getOrders = async (
                 },
             })
 
-            filters.$or = searchConditions  // Также добавляем в фильтры для countDocuments
+            // filters.$or = searchConditions  // Также добавляем в фильтры для countDocuments
+            const totalOrders = await Order.aggregate([
+                ...aggregatePipeline.filter(stage => stage.$match && stage.$match !== filters),
+                { $count: 'total' }
+            ]).then(result => result[0]?.total || 0)
         }
 
         // Настройки сортировки
