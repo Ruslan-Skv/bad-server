@@ -105,8 +105,20 @@ export const getOrders = async (
                     as: 'customer',
                 },
             },
-            { $unwind: '$customer' },  // Разворачиваем массив customer
-            { $unwind: '$products' },  // Разворачиваем массив products
+            // { $unwind: '$customer' },  // Разворачиваем массив customer
+            // { $unwind: '$products' },  // Разворачиваем массив products
+            {
+                $unwind: {
+                    path: '$customer',
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $unwind: {
+                    path: '$products',
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
         ]
 
         // Поиск по номеру заказа или названию продукта
