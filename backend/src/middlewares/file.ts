@@ -43,10 +43,11 @@ const storage = multer.diskStorage({
         // Генерируем уникальное имя файла для избежания конфликтов
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const extension = path.extname(file.originalname);
-        const nameWithoutExtension = path.basename(file.originalname, extension);
+        // const nameWithoutExtension = path.basename(file.originalname, extension);
     
     // Сохраняем файл с уникальным именем, но сохраняем расширение
-    cb(null, `${nameWithoutExtension}-${uniqueSuffix}${extension}`);
+    // cb(null, `${nameWithoutExtension}-${uniqueSuffix}${extension}`);
+    cb(null, `${uniqueSuffix}${extension}`);
 
         // Сохраняем файл с оригинальным именем
         // cb(null, file.originalname)
