@@ -16,16 +16,22 @@ export const uploadFile = async (
 ) => {
     // Проверяем, был ли загружен файл
     if (!req.file) {
+        console.log('No file uploaded')
         return next(new BadRequestError('Файл не загружен'))
     }
 
-        if (req.file.size < fileSizeLimits.minFileSize) {
+    console.log('File uploaded:', req.file.originalname, 'size:', req.file.size)
+
+    if (req.file.size < fileSizeLimits.minFileSize) {
+        console.log('File too small:', req.file.size)
         return next(new BadRequestError('Файл слишком маленький (менее 2KB)'))
     }
 
     try {
         await sharp(req.file.path).metadata() // Если не изображение — упадёт ошибка
+        console.log('Image metadata validated')
     } catch (error) {
+        console.log('Invalid image format:', error)
         return next(new BadRequestError('Неверный формат изображения'))
     }
 
@@ -34,12 +40,15 @@ export const uploadFile = async (
         const fileName = process.env.UPLOAD_PATH_TEMP
             ? `/${process.env.UPLOAD_PATH_TEMP}/${req.file.filename}` // Если указан путь в env
             : `/${req.file?.filename}` // Если путь не указан, используем только имя файла
+
+        console.log('Returning fileName:', fileName)
         // Возвращаем успешный ответ со статусом 201 Created
         return res.status(constants.HTTP_STATUS_CREATED).send({
             fileName, // Путь к сохраненному файлу на сервере
             originalName: req.file.originalname, // Оригинальное имя файла от клиента
         })
     } catch (error) {
+        console.log('Unexpected error:', error)
         return next(error)
     }
 }
