@@ -32,11 +32,14 @@ export const getOrders = async (
             search, // Поисковый запрос
         } = req.query
 
-        const actualLimit = Math.min(Number(limit), 10); // Максимум 10 записей
-        const skip = (Number(page) - 1) * actualLimit;
+        // const actualLimit = Math.min(Number(limit), 10); // Максимум 10 записей
+        // const skip = (Number(page) - 1) * actualLimit;
+        const pageSize = Math.min(Math.max(Number(limit), 1), 10)
+        const currentPage = Math.max(Number(page) || 1, 1)
+        const skip = (currentPage - 1) * pageSize
         
-        console.log('Query params:', req.query);
-        console.log('Actual limit:', actualLimit);
+        // console.log('Query params:', req.query);
+        // console.log('Actual limit:', actualLimit);
 
         // Создаем объект фильтров для MongoDB
         const filters: FilterQuery<Partial<IOrder>> = {}
@@ -142,7 +145,7 @@ export const getOrders = async (
         aggregatePipeline.push(
             { $sort: sort },
             { $skip: skip},
-            { $limit: actualLimit },
+            { $limit: pageSize },
             {
                 $group: {
                     _id: '$_id',
@@ -161,7 +164,7 @@ export const getOrders = async (
         // Считаем общее количество заказов с учетом фильтров
         const totalOrders = await Order.countDocuments(filters)
         // Вычисляем общее количество страниц
-        const totalPages = Math.ceil(totalOrders / actualLimit)
+        const totalPages = Math.ceil(totalOrders / pageSize)
 
         console.log('Orders count:', orders.length);
         console.log('Total orders:', totalOrders);
@@ -173,7 +176,7 @@ export const getOrders = async (
                 totalOrders,
                 totalPages,
                 currentPage: Number(page),
-                pageSize: actualLimit,
+                pageSize: pageSize,
             },
         })
     } catch (error) {
