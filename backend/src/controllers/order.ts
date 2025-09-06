@@ -33,6 +33,9 @@ export const getOrders = async (
         const actualLimit = Math.min(Number(limit), 10); // Максимум 10 записей
         const skip = (Number(page) - 1) * actualLimit;
         
+        console.log('Query params:', req.query);
+        console.log('Actual limit:', actualLimit);
+
         // Создаем объект фильтров для MongoDB
         const filters: FilterQuery<Partial<IOrder>> = {}
 
@@ -157,6 +160,9 @@ export const getOrders = async (
         const totalOrders = await Order.countDocuments(filters)
         // Вычисляем общее количество страниц
         const totalPages = Math.ceil(totalOrders / actualLimit)
+
+        console.log('Orders count:', orders.length);
+        console.log('Total orders:', totalOrders);
 
         // Возвращаем ответ
         res.status(200).json({
