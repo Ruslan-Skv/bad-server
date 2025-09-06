@@ -1,6 +1,12 @@
 import { NextFunction, Request, Response } from 'express'
 import { constants } from 'http2'
 import BadRequestError from '../errors/bad-request-error'
+import sharp from 'sharp'
+
+export const fileSizeLimits = {
+    minFileSize: 2 * 1024,
+    maxFileSize: 10 * 1024 * 1024, // 10 MB
+}
 
 // Middleware для обработки загрузки файлов
 export const uploadFile = async (
@@ -11,6 +17,16 @@ export const uploadFile = async (
     // Проверяем, был ли загружен файл
     if (!req.file) {
         return next(new BadRequestError('Файл не загружен'))
+    }
+
+        if (req.file.size < fileSizeLimits.minFileSize) {
+        return next(new BadRequestError('Файл слишком маленький (менее 2KB)'))
+    }
+
+    try {
+        await sharp(req.file.path).metadata() // Если не изображение — упадёт ошибка
+    } catch (error) {
+        return next(new BadRequestError('Неверный формат изображения'))
     }
 
     try {
