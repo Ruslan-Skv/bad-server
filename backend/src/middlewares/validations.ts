@@ -4,7 +4,8 @@ import { Types } from 'mongoose'
 // Регулярное выражение для валидации телефонных номеров
 // eslint-disable-next-line no-useless-escape
 // export const phoneRegExp = /^(\+\d+)?(?:\s|-?|\(?\d+\)?)+$/
-export const phoneRegExp = /^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$/
+// export const phoneRegExp = /^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$/
+export const phoneRegExp = /^[\d\s\-\+\(\)]{7,20}$/
 
 // Enum для типов оплаты
 export enum PaymentType {
