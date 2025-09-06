@@ -30,15 +30,14 @@ export const uploadFile = async (
     }
 
     try {
-        const fileName = req.file.filename;
         // Формируем путь к загруженному файлу
-        // const fileName = process.env.UPLOAD_PATH
-        //     ? `/${process.env.UPLOAD_PATH}/${req.file.filename}` // Если указан путь в env
-        //     : `/${req.file?.filename}` // Если путь не указан, используем только имя файла
+        const fileName = process.env.UPLOAD_PATH
+            ? `/${process.env.UPLOAD_PATH}/${req.file.filename}` // Если указан путь в env
+            : `/${req.file?.filename}` // Если путь не указан, используем только имя файла
         // Возвращаем успешный ответ со статусом 201 Created
         return res.status(constants.HTTP_STATUS_CREATED).send({
             fileName, // Путь к сохраненному файлу на сервере
-            originalName: req.file?.originalname, // Оригинальное имя файла от клиента
+            originalName: req.file.originalname, // Оригинальное имя файла от клиента
         })
     } catch (error) {
         return next(error)
