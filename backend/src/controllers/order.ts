@@ -7,7 +7,7 @@ import Product, { IProduct } from '../models/product'
 import User from '../models/user'
 // import { sanitizeText } from '../utils/sanitize'
 import sanitizeHtml from 'sanitize-html'
-import escapeRegExp from 'utils/escapeRegExp'
+import escapeRegExp from '../utils/escapeRegExp'
 
 // eslint-disable-next-line max-len
 // GET /orders?page=2&limit=5&sort=totalAmount&order=desc&orderDateFrom=2024-07-01&orderDateTo=2024-08-01&status=delivering&totalAmountFrom=100&totalAmountTo=1000&search=%2B1
