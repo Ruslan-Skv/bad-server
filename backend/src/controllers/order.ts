@@ -32,8 +32,6 @@ export const getOrders = async (
             search, // Поисковый запрос
         } = req.query
 
-        // const actualLimit = Math.min(Number(limit), 10); // Максимум 10 записей
-        // const skip = (Number(page) - 1) * actualLimit;
         const pageSize = Math.min(Math.max(Number(limit), 1), 10)
         const currentPage = Math.max(Number(page) || 1, 1)
         const skip = (currentPage - 1) * pageSize
@@ -118,10 +116,15 @@ export const getOrders = async (
             },
         ]
 
+        // Создаем копию пайплайна для подсчета
+        let countPipeline = [...aggregatePipeline];
+
         // Поиск по номеру заказа или названию продукта
-        if (search) {
-            const searchRegex = new RegExp(escapeRegExp(search as string), 'i')  // Case-insensitive regex
-            const searchNumber = Number(search)  // Пытаемся преобразовать в число
+        if (search && typeof search === 'string') {
+            const sanitizedSearch = escapeRegExp(search)
+            const searchRegex = new RegExp(sanitizedSearch, 'i')
+            const searchNumber = Number(sanitizedSearch)
+    
             // Экранирование специальных символов regex для безопасности
             // const sanitizedSearch = (search as string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             // const searchRegex = new RegExp(sanitizedSearch, 'i');
@@ -140,11 +143,17 @@ export const getOrders = async (
                 },
             })
 
+                       // Добавляем поиск в пайплайн для подсчета
+            countPipeline.push({
+                $match: {
+                    $or: searchConditions,
+                },
+            })
             // filters.$or = searchConditions  // Также добавляем в фильтры для countDocuments
-            const totalOrders = await Order.aggregate([
-                ...aggregatePipeline.filter(stage => stage.$match && stage.$match !== filters),
-                { $count: 'total' }
-            ]).then(result => result[0]?.total || 0)
+            // const totalOrders = await Order.aggregate([
+            //     ...aggregatePipeline.filter(stage => stage.$match && stage.$match !== filters),
+            //     { $count: 'total' }
+            // ]).then(result => result[0]?.total || 0)
         }
 
         // Настройки сортировки
@@ -173,14 +182,18 @@ export const getOrders = async (
         )
 
         // Выполняем агрегационный запрос
-        const orders = await Order.aggregate(aggregatePipeline)
+        // const orders = await Order.aggregate(aggregatePipeline)
+        // Выполняем оба запроса параллельно
+        const [orders, totalResult] = await Promise.all([
+            Order.aggregate(aggregatePipeline),
+            Order.aggregate([...countPipeline, { $count: 'total' }])
+        ]);
+
         // Считаем общее количество заказов с учетом фильтров
-        const totalOrders = await Order.countDocuments(filters)
+        // const totalOrders = await Order.countDocuments(filters)
+        const totalOrders = totalResult[0]?.total || 0;
         // Вычисляем общее количество страниц
         const totalPages = Math.ceil(totalOrders / pageSize)
-
-        console.log('Orders count:', orders.length);
-        console.log('Total orders:', totalOrders);
 
         // Возвращаем ответ
         res.status(200).json({
@@ -188,8 +201,8 @@ export const getOrders = async (
             pagination: {
                 totalOrders,
                 totalPages,
-                currentPage: Number(page),
-                pageSize: pageSize,
+                currentPage,
+                pageSize,
             },
         })
     } catch (error) {
