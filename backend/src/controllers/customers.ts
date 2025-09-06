@@ -31,6 +31,10 @@ export const getCustomers = async (
             search, // Поисковый запрос
         } = req.query
 
+        // Нормализуем лимит - максимум 10 записей
+        const actualLimit = Math.min(Number(limit), 10)
+        const skip = (Number(page) - 1) * actualLimit
+
         // Создаем объект фильтров для MongoDB
         const filters: FilterQuery<Partial<IUser>> = {}
 
@@ -131,8 +135,8 @@ export const getCustomers = async (
         // Настройки пагинации
         const options = {
             sort, // Поле и порядок сортировки
-            skip: (Number(page) - 1) * Number(limit), // Пропустить N документов
-            limit: Number(limit), // Ограничить количество документов
+            skip, // Пропустить N документов
+            limit: actualLimit, // Ограничить количество документов
         }
 
         // Получаем пользователей с применением фильтров, сортировки и пагинации
@@ -163,7 +167,7 @@ export const getCustomers = async (
                 totalUsers, // Общее количество пользователей
                 totalPages, // Общее количество страниц
                 currentPage: Number(page), // Текущая страница
-                pageSize: Number(limit), // Размер страницы
+                pageSize: actualLimit, // Размер страницы
             },
         })
     } catch (error) {

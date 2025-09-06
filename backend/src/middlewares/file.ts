@@ -1,6 +1,6 @@
 import { Request, Express } from 'express'
 import multer, { FileFilterCallback } from 'multer'  // Middleware для обработки файлов
-import { join } from 'path'  // Утилита для работы с путями
+import path, { join } from 'path'  // Утилита для работы с путями
 
 // middleware для работы с файлами
 // Определяем типы для callback-функций multer
@@ -40,8 +40,16 @@ const storage = multer.diskStorage({
         file: Express.Multer.File,  // Объект файла
         cb: FileNameCallback  // Callback функция для возврата имени файла
     ) => {
+        // Генерируем уникальное имя файла для избежания конфликтов
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const extension = path.extname(file.originalname);
+        const nameWithoutExtension = path.basename(file.originalname, extension);
+    
+    // Сохраняем файл с уникальным именем, но сохраняем расширение
+    cb(null, `${nameWithoutExtension}-${uniqueSuffix}${extension}`);
+
         // Сохраняем файл с оригинальным именем
-        cb(null, file.originalname)
+        // cb(null, file.originalname)
         // Это может привести к конфликтам, если файлы с одинаковыми именами
         // будут загружаться разными пользователями
     },

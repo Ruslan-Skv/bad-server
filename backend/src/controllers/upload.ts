@@ -12,6 +12,7 @@ export const uploadFile = async (
     if (!req.file) {
         return next(new BadRequestError('Файл не загружен'))
     }
+
     try {
         // Формируем путь к загруженному файлу
         const fileName = process.env.UPLOAD_PATH

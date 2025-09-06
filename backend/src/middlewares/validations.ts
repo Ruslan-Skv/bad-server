@@ -173,7 +173,7 @@ export const validateOrdersQuery = celebrate({
         totalAmountTo: Joi.number().min(0),
         orderDateFrom: Joi.date().iso(),
         orderDateTo: Joi.date().iso(),
-        search: Joi.string().max(100) // Ограничиваем длину поискового запроса
+        search: Joi.string().max(100).pattern(/^[a-zA-Z0-9\s\+]*$/) // Ограничиваем длину поискового запроса. Запрещаем специальные символы 
     })
 }, {
     abortEarly: false, // Возвращать все ошибки, а не только первую

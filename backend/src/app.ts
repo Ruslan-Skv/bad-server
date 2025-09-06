@@ -21,7 +21,8 @@ app.use(cookieParser())
 // app.use(cors())
 app.use(cors({
     // origin: process.env.ORIGIN_ALLOW,
-    origin: ['http://localhost', 'http://localhost:5173'],
+    // origin: ['http://localhost', 'http://localhost:5173'],
+    origin: 'http://localhost:5173',
     credentials: true
 })); // credentials: true позволяет передавать куки и авторизационные headers
 // app.use(express.static(path.join(__dirname, 'public')));
@@ -40,7 +41,7 @@ app.set('trust proxy', 1);
 app.use(limiter)
 // Обработка preflight запросов (OPTIONS) для всех маршрутов
 // Необходимо для CORS при запросах с дополнительными headers
-app.options('*', cors())
+// app.options('*', cors())
 app.use(ExpressMongoSanitize())
 // Подключение основных маршрутов приложения
 app.use(routes)
