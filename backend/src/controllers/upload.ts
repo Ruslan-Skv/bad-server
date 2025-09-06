@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from 'express'
 import { constants } from 'http2'
 import BadRequestError from '../errors/bad-request-error'
+import sharp from 'sharp'
+import { fileSizeLimits } from '../middlewares/file'
 
 export const uploadFile = async (
     req: Request,
@@ -10,17 +12,79 @@ export const uploadFile = async (
     if (!req.file) {
         return next(new BadRequestError('Файл не загружен'))
     }
+
+    if (req.file.size < fileSizeLimits.minFileSize) {
+        return next(new BadRequestError('Файл слишком маленький (менее 2KB)'))
+    }
+
+    try {
+        await sharp(req.file.path).metadata() // Если не изображение — упадёт ошибка
+    } catch (error) {
+        return next(new BadRequestError('Неверный формат изображения'))
+    }
+
     try {
         const fileName = process.env.UPLOAD_PATH
             ? `/${process.env.UPLOAD_PATH}/${req.file.filename}`
-            : `/${req.file?.filename}`
+            : `/${req.file.filename}`
+
         return res.status(constants.HTTP_STATUS_CREATED).send({
             fileName,
-            originalName: req.file?.originalname,
+            originalName: req.file.originalname,
         })
     } catch (error) {
         return next(error)
     }
 }
 
-export default {}
+// export const fileSizeLimits = {
+//     minFileSize: 2 * 1024,
+//     maxFileSize: 10 * 1024 * 1024, // 10 MB
+// }
+
+// // Middleware для обработки загрузки файлов
+// export const uploadFile = async (
+//     req: Request,
+//     res: Response,
+//     next: NextFunction
+// ) => {
+//     // Проверяем, был ли загружен файл
+//     if (!req.file) {
+//         console.log('No file uploaded')
+//         return next(new BadRequestError('Файл не загружен'))
+//     }
+
+//     console.log('File uploaded:', req.file.originalname, 'size:', req.file.size)
+
+//     if (req.file.size < fileSizeLimits.minFileSize) {
+//         console.log('File too small:', req.file.size)
+//         return next(new BadRequestError('Файл слишком маленький (менее 2KB)'))
+//     }
+
+//     try {
+//         await sharp(req.file.path).metadata() // Если не изображение — упадёт ошибка
+//         console.log('Image metadata validated')
+//     } catch (error) {
+//         console.log('Invalid image format:', error)
+//         return next(new BadRequestError('Неверный формат изображения'))
+//     }
+
+//     try {
+//         // Формируем путь к загруженному файлу
+//         const fileName = process.env.UPLOAD_PATH_TEMP
+//             ? `/${process.env.UPLOAD_PATH_TEMP}/${req.file.filename}` // Если указан путь в env
+//             : `/${req.file?.filename}` // Если путь не указан, используем только имя файла
+
+//         console.log('Returning fileName:', fileName)
+//         // Возвращаем успешный ответ со статусом 201 Created
+//         return res.status(constants.HTTP_STATUS_CREATED).send({
+//             fileName, // Путь к сохраненному файлу на сервере
+//             originalName: req.file.originalname, // Оригинальное имя файла от клиента
+//         })
+//     } catch (error) {
+//         console.log('Unexpected error:', error)
+//         return next(error)
+//     }
+// }
+
+// export default {}
