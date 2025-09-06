@@ -3,7 +3,8 @@ import { Types } from 'mongoose'
 
 // Регулярное выражение для валидации телефонных номеров
 // eslint-disable-next-line no-useless-escape
-export const phoneRegExp = /^(\+\d+)?(?:\s|-?|\(?\d+\)?)+$/
+// export const phoneRegExp = /^(\+\d+)?(?:\s|-?|\(?\d+\)?)+$/
+export const phoneRegExp = /^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$/
 
 // Enum для типов оплаты
 export enum PaymentType {
@@ -159,3 +160,22 @@ export const validateAuthentication = celebrate({
         }),
     }),
 })
+
+// Валидация параметров запроса для получения заказов
+export const validateOrdersQuery = celebrate({
+    query: Joi.object().keys({
+        page: Joi.number().integer().min(1).default(1),
+        limit: Joi.number().integer().min(1).max(10).default(10), // ← Максимум 10!
+        sortField: Joi.string().valid('createdAt', 'totalAmount', 'orderNumber', 'status').default('createdAt'),
+        sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
+        status: Joi.string().valid('pending', 'processing', 'delivering', 'delivered', 'cancelled'),
+        totalAmountFrom: Joi.number().min(0),
+        totalAmountTo: Joi.number().min(0),
+        orderDateFrom: Joi.date().iso(),
+        orderDateTo: Joi.date().iso(),
+        search: Joi.string().max(100) // Ограничиваем длину поискового запроса
+    })
+}, {
+    abortEarly: false, // Возвращать все ошибки, а не только первую
+    allowUnknown: true // Разрешать другие параметры (необязательные)
+});

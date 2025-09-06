@@ -5,6 +5,7 @@ import NotFoundError from '../errors/not-found-error'
 import Order, { IOrder } from '../models/order'
 import Product, { IProduct } from '../models/product'
 import User from '../models/user'
+import { sanitizeText } from '../utils/sanitize'
 
 // eslint-disable-next-line max-len
 // GET /orders?page=2&limit=5&sort=totalAmount&order=desc&orderDateFrom=2024-07-01&orderDateTo=2024-08-01&status=delivering&totalAmountFrom=100&totalAmountTo=1000&search=%2B1
@@ -29,6 +30,9 @@ export const getOrders = async (
             search, // Поисковый запрос
         } = req.query
 
+        const actualLimit = Math.min(Number(limit), 10); // Максимум 10 записей
+        const skip = (Number(page) - 1) * actualLimit;
+        
         // Создаем объект фильтров для MongoDB
         const filters: FilterQuery<Partial<IOrder>> = {}
 
@@ -99,8 +103,12 @@ export const getOrders = async (
 
         // Поиск по номеру заказа или названию продукта
         if (search) {
-            const searchRegex = new RegExp(search as string, 'i')  // Case-insensitive regex
-            const searchNumber = Number(search)  // Пытаемся преобразовать в число
+            // const searchRegex = new RegExp(search as string, 'i')  // Case-insensitive regex
+            // const searchNumber = Number(search)  // Пытаемся преобразовать в число
+            // Экранирование специальных символов regex для безопасности
+            const sanitizedSearch = (search as string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const searchRegex = new RegExp(sanitizedSearch, 'i');
+            const searchNumber = Number(sanitizedSearch);
 
             const searchConditions: any[] = [{ 'products.title': searchRegex }] // Поиск по названию продукта
 
@@ -128,8 +136,8 @@ export const getOrders = async (
         // Добавляем пагинацию и группировку в pipeline
         aggregatePipeline.push(
             { $sort: sort },
-            { $skip: (Number(page) - 1) * Number(limit) },
-            { $limit: Number(limit) },
+            { $skip: skip},
+            { $limit: actualLimit },
             {
                 $group: {
                     _id: '$_id',
@@ -148,7 +156,7 @@ export const getOrders = async (
         // Считаем общее количество заказов с учетом фильтров
         const totalOrders = await Order.countDocuments(filters)
         // Вычисляем общее количество страниц
-        const totalPages = Math.ceil(totalOrders / Number(limit))
+        const totalPages = Math.ceil(totalOrders / actualLimit)
 
         // Возвращаем ответ
         res.status(200).json({
@@ -157,7 +165,7 @@ export const getOrders = async (
                 totalOrders,
                 totalPages,
                 currentPage: Number(page),
-                pageSize: Number(limit),
+                pageSize: actualLimit,
             },
         })
     } catch (error) {
@@ -175,11 +183,14 @@ export const getOrdersCurrentUser = async (
         const userId = res.locals.user._id  // ID пользователя из middleware аутентификации
         const { search, page = 1, limit = 5 } = req.query
 
+        const actualLimit = Math.min(Number(limit), 10);
+        const skip = (Number(page) - 1) * actualLimit;
+
         // Настройки пагинации
-        const options = {
-            skip: (Number(page) - 1) * Number(limit),
-            limit: Number(limit),
-        }
+        // const options = {
+        //     skip: (Number(page) - 1) * Number(limit),
+        //     limit: Number(limit),
+        // }
 
         // Находим пользователя с populate заказов
         const user = await User.findById(userId)
@@ -206,8 +217,11 @@ export const getOrdersCurrentUser = async (
         // Поиск по номеру заказа или названию продукта
         if (search) {
             // если не экранировать то получаем Invalid regular expression: /+1/i: Nothing to repeat
-            const searchRegex = new RegExp(search as string, 'i')
-            const searchNumber = Number(search)
+            // const searchRegex = new RegExp(search as string, 'i')
+            // const searchNumber = Number(search)
+            const sanitizedSearch = (search as string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const searchRegex = new RegExp(sanitizedSearch, 'i');
+            const searchNumber = Number(sanitizedSearch);
             // Ищем продукты по названию
             const products = await Product.find({ title: searchRegex })
             // const productIds = products.map((product) => product._id)
@@ -235,9 +249,9 @@ export const getOrdersCurrentUser = async (
 
         // Пагинация
         const totalOrders = orders.length
-        const totalPages = Math.ceil(totalOrders / Number(limit))
+        const totalPages = Math.ceil(totalOrders / actualLimit)
 
-        orders = orders.slice(options.skip, options.skip + options.limit)
+        orders = orders.slice(skip, skip + actualLimit)
 
         return res.send({
             orders,
@@ -245,7 +259,7 @@ export const getOrdersCurrentUser = async (
                 totalOrders,
                 totalPages,
                 currentPage: Number(page),
-                pageSize: Number(limit),
+                pageSize: actualLimit,
             },
         })
     } catch (error) {
@@ -329,6 +343,9 @@ export const createOrder = async (
         const { address, payment, phone, total, email, items, comment } =
             req.body
 
+        // САНИТИЗИРУЕМ КОММЕНТАРИЙ ↓
+        const sanitizedComment = comment ? sanitizeText(comment) : '';
+
         // Формируем корзину и проверяем товары
         items.forEach((id: Types.ObjectId) => {
             // const product = products.find((p) => p._id.equals(id))
@@ -354,7 +371,7 @@ export const createOrder = async (
             payment,
             phone,
             email,
-            comment,
+            comment: sanitizedComment,
             customer: userId,
             deliveryAddress: address,
         })
